@@ -1,0 +1,27 @@
+name: Build Windows EXE
+
+# Esto crea un botón para que podamos ejecutar el proceso manualmente
+on:
+  workflow_dispatch: 
+
+jobs:
+  compilar-en-windows:
+    runs-on: windows-latest # Le pedimos a GitHub una máquina con Windows
+
+    steps:
+      - name: 1. Descargar el código fuente
+        uses: actions/checkout@v4
+
+      - name: 2. Preparar el entorno y compilar (El script oficial)
+        shell: powershell
+        run: |
+          cd building\windows
+          docker build -t udsactor-builder .
+          $projectDir = Convert-Path ../..
+          docker run --rm -v "${projectDir}:c:\crate" -w /crate udsactor-builder cargo build --release
+
+      - name: 3. Guardar el .exe para descargarlo
+        uses: actions/upload-artifact@v4
+        with:
+          name: uds-actor-windows-exe
+          path: target\release\*.exe
